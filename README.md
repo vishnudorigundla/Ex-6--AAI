@@ -20,62 +20,64 @@ Step 5:Iterate through each word in the tokenized text.<br>
 ## PROGRAM
 
 ```python
-import nltk
-from nltk.corpus import wordnet
+!pip install nltk
 
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import wordnet
+nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
-nltk.download('punkt')
-
-# Function to identify verbs in a sentence
-def get_verbs(sentence):
-    verbs = []
-    pos_tags = nltk.pos_tag(nltk.word_tokenize(sentence))
-    for word, tag in pos_tags:
-        if tag.startswith('V'):  # Verbs start with 'V' in the POS tag
-            verbs.append(word)
-    return verbs
 
 
-def get_synonyms(word):
+f = open("/content/sample_data.txt", "r")
+sentences = f.readlines()
+f.close()
+verbs = [[] for _ in sentences]
+i=0
+for sentence in sentences:
+  print("Sentence",i+1,":", sentence)
+
+  # Tokenize the sentence into words
+  words = word_tokenize(sentence)
+
+  # Identify the parts of speech for each word
+  pos_tags = nltk.pos_tag(words)
+
+  # Print the parts of speech
+  for word,tag in pos_tags:
+    print(word,"->",tag)
+
+    # Save verbs
+    if tag.startswith('VB'):
+      verbs[i].append(word)
+  i+=1
+  print("\n\n") 
+
+# Identify synonyms and antonyms for each word
+print("Synonyms and Antonymns for verbs in each sentence:\n")
+i=0
+for sentence in sentences:
+  print("Sentence",i+1,":", sentence)
+  pos_tags = nltk.pos_tag(verbs[i])
+  for word,tag in pos_tags:
+    print(word,"->",tag)
     synonyms = []
+    antonyms = []
     for syn in wordnet.synsets(word):
-        for lemma in syn.lemmas():
-            synonyms.append(lemma.name())
-    return synonyms
+      for lemma in syn.lemmas():
+        synonyms.append(lemma.name())
+        if lemma.antonyms():
+          for antonym in lemma.antonyms():
+            antonyms.append(antonym.name())
 
+    # Print the synonyms and antonyms
+    print("Synonyms:",set(synonyms))
+    print("Antonyms:", set(antonyms) if antonyms else "None")
+    print()
+  print("\n\n")
+  i+=1
 
-def read_text_file(file_path):
-    with open(file_path, 'r') as file:
-        text = file.read()
-    return text
-
-
-def main():
-    file_path = 'sample.txt'
-
-    text = read_text_file(file_path)
-    sentences = nltk.sent_tokenize(text)
-
-    all_verbs = []
-    synonyms_dict = {}
-
-    for sentence in sentences:
-        verbs = get_verbs(sentence)
-        all_verbs.extend(verbs)
-        for verb in verbs:
-            synonyms = get_synonyms(verb)
-            synonyms_dict[verb] = synonyms
-
-    with open('output.csv', 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['Verb', 'Synonyms'])
-        for verb, synonyms in synonyms_dict.items():
-            writer.writerow([verb, ', '.join(synonyms)])
-
-
-if __name__ == '__main__':
-    main()
 ```
 
 ## OUTPUT
